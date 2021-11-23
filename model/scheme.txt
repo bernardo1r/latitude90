@@ -1,0 +1,16 @@
+funcao lanca_dados()
+funcao validar(x0, y0, x1, y1, d)
+funcao andar(x0, y0, x1, y1)
+funcao inicia_jogo()
+funcao lanca_dado_colorido()
+funcao executa_dado_colido()
+
+tabuleiro, polos, vez, metas, exploradores, modo_dupla
+
+tabuleiro[2][6][12] = {"jogadores":[lista de exploradores], ["ficha":True]}
+polos[2] = [lista de exploradores] = [1, 1, 1, 2, 2]
+x = 6, y = 12, z = 0 - polo
+x = 6, y = 12, z = 1 - polo
+vez = numero do jogador, 0 - 3
+metas[4] = numero de metas por jogador
+exploradores[4] = numero de exploradores por jogador

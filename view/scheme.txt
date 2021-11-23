@@ -1,0 +1,60 @@
+fronteiras = [lista de fronteira]
+
+fronteira = 
+{
+    "front": <front>,
+    "canv_obj": [[{"jogador": <n_jogador>, "circ": <canvas_obj_n>, "qtd": {"num": <n_explorador>, "text": <canvas_obj_n>}}], 
+                 [{"jogador": <n_jogador>, "circ": <canvas_obj_n>, "qtd": {"num": <n_explorador>, "text": <canvas_obj_n>}}]],
+
+    "game_coords": {"x":, <x>, "y":, <y>}
+}
+
+dados_coord =
+[
+    {"fundo": <map_coord>, "fundo_lado": inteiro, "img": <map_coord>},
+    {"fundo": <map_coord>, "fundo_lado": inteiro, "img": <map_coord>}
+]
+
+<color> = tkinter color	
+<n_explorador> = número entre [1, 6]
+<n_jogador> = número entre [0, 3]
+<canvas_obj_n> = número que representa o objeto criado pelo canvas
+<x> = número entre [0, 6]
+<y> = número entre [0, 12]
+
+<front> (tipo trapezio) =
+{
+    "tipo": "trapezio",
+    "a": {<map_coord>},
+    "b": {<map_coord>},
+    "c": {<map_coord>},
+    "d": {<map_coord>},
+    "pos_jogadores": <pos_jogadores>
+}
+<front>  (tipo circular) =
+{
+    "tipo": "circular",
+    "v_fim": {<map_coord>},
+    "v_inicio": {<map_coord>},
+    "r_maior": <pixel>,
+    "r_menor": <pixel>,
+    "pos_jogadores": <pos_jogadores>
+}
+<front> (tipo polo) =
+{
+    "tipo": "polo",
+    "circ": {<map_coord>, "r": <pixel>},
+    "lines": [<pixel>, <pixel>],
+    "pos_jogadores": <pos_jogadores>
+}
+
+<pos_jogadores> = [<map_coord>, <map_coord>]
+
+<map_coord> = 
+{
+    "x": <pixel>,
+    "y": <pixel>
+}
+
+<pixel> = coordenada no mapa (pixel) relativa ao centro do polo
+
