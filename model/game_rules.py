@@ -263,6 +263,7 @@ def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> No
 
     remover_explorador(vez, x0, y0, z0)        
 
+    status = None
     if verifica_polo(x1, y1):
         if z0 != (vez % 2):
             #chegou no polo oposto
@@ -271,11 +272,13 @@ def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> No
             if exploradores[vez] == 6:
                 jogo_fim = True
 
+            status = ("polo", )
+
         else:
             #chegou no polo de início
             polos[vez%2].append(vez)
 
-        return
+        return status
             
 
     if len(tabuleiro[z1][x1][y1]["jogadores"]) > 0:
@@ -287,17 +290,22 @@ def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> No
                 #se nao estiver no modo dupla ou nao for o explorador dupla do jogador da vez
                 cap = tabuleiro[z1][x1][y1]["jogadores"].pop()
                 polos[cap%2].append(cap)
+
+                status = ("captura", cap)
         else:
             #caso meta é conquistada
             if "ficha" in tabuleiro[z1][x1][y1]:
                 del tabuleiro[z1][x1][y1]["ficha"]
 
                 metas[vez] += 1
+
+                status = ("ficha", )
         
 
     tabuleiro[z1][x1][y1]["jogadores"].append(vez)
 
-    
+    return status
+
 def verificar_casa(x: int, y: int, z: int) -> bool:
     global tabuleiro, polos, vez
 
@@ -368,7 +376,10 @@ def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: 
     if not val:
         return False
 
-    andar(x0, y0, z0, x1, y1, z1, dado)
+    status = andar(x0, y0, z0, x1, y1, z1, dado)
+
+    if status:
+        return status
 
     return True
 

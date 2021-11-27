@@ -20,7 +20,7 @@ canv_dados = []
 n_jogadores = 0
 modo_dupla = False
 raio_explorador = 10
-jogada = None
+jogada_ant = None
 canvas = None
 
 def faz_pos_rel(x, y, c_x, c_y):
@@ -200,7 +200,6 @@ def faz_fronteiras_trapezio(grossura_borda):
 
         raio_meio_horizontal = raio_maior_horizontal - (altura_casa_horizontal/2)
 
-        #print(f"raio_maior {raio_maior_horizontal}, raio_menor {raio_menor_horizontal}")
 
         #reduz os vetores para ficar com a nova modulo
         setor1["front"]["a"]["x"], setor1["front"]["a"]["y"] = diminui_vetor(setor1["front"]["a"]["x"], setor1["front"]["a"]["y"], raio_maior_horizontal)
@@ -307,9 +306,18 @@ def checa_casa_circular(obj, x, y):
     
     return False
 
+def get_casa(x, y):
+    #função recebe coordenadas do tabuleiro conforme game_rules e retorna a casa com essas coordenadas
+    global fronteiras
+
+    for casa in fronteiras:
+        if casa["game_coords"]["x"] == x and casa["game_coords"]["y"] == y:
+            return casa
+
+    return False
 
 def checa_casa(x, y):
-    global c_x, c_y, meio_x
+    global c_x, c_y, meio_x, fronteiras
 
 
     if x > meio_x:
@@ -348,7 +356,7 @@ def checa_clockwise(x, y, borda_x, borda_y):
 
 
 def click(event):
-    global jogada, meio_x, canvas
+    global jogada_ant, meio_x, canvas
     
     casa = checa_casa(event.x, event.y)
 
@@ -359,17 +367,16 @@ def click(event):
         else:
             z = 0
 
-        if jogada == None:
-            casa = copy.deepcopy(casa)
+        if jogada_ant == None:
             casa["game_coords"]["z"] = z
             
-            jogada = casa
+            jogada_ant = casa
             return
 
         else:
-            x0 = jogada["game_coords"]["x"]
-            y0 = jogada["game_coords"]["y"]
-            z0 = jogada["game_coords"]["z"]
+            x0 = jogada_ant["game_coords"]["x"]
+            y0 = jogada_ant["game_coords"]["y"]
+            z0 = jogada_ant["game_coords"]["z"]
 
             x1 = casa["game_coords"]["x"]
             y1 = casa["game_coords"]["y"]
@@ -380,16 +387,36 @@ def click(event):
             for e, el in enumerate(d):
                 ret = game_rules.validar_e_andar(x0, y0, z0, x1, y1, z1, el)
                 if ret:
+
                     d.pop(e)
 
                     vez = game_rules.get_vez()
 
-                    remove_jogador_casa(jogada, z0, vez)
-                    insere_jogador_casa(casa, z1, vez)
+                    if type(ret) == tuple:
+                        if ret[0] == "polo":
+                            remove_jogador_casa(jogada_ant, z0, vez)
+
+                        elif ret[0] == "captura":
+                            #remove jogador inimigo da posição de destino do jogador da vez e insire no seu polo
+                            polo = ret[1] % 2
+                            casa_polo = get_casa(6, 12)
+
+                            remove_jogador_casa(casa, z1, ret[1])
+                            insere_jogador_casa(casa_polo, polo, ret[1])
+
+                    if ret == True or (type(ret) == tuple and ret[0] != "polo"):
+                        remove_jogador_casa(jogada_ant, z0, vez)
+                        insere_jogador_casa(casa, z1, vez)
+
 
                     remove_dado(e)
 
-                    jogada = None
+                    fim_de_jogo = game_rules.get_fim_de_jogo()
+
+                    if fim_de_jogo:
+                        print("o jogo acabou")
+
+                    jogada_ant = None
 
                     if len(d) == 0:
                         game_rules.passa_vez()
@@ -397,10 +424,11 @@ def click(event):
 
                     return
 
-            jogada = None
+
+            jogada_ant = None
 
     else:
-        jogada = None
+        jogada_ant = None
         
 def remove_dado(idx):
     global canvas, canv_dados, dados_coord
@@ -505,7 +533,6 @@ def insere_jogador_casa(casa, z, jogador):
         exp = {}
         exp["jogador"] = jogador
         exp["circ"] = canvas.create_oval(x-raio_explorador, y-raio_explorador, x+raio_explorador, y+raio_explorador, fill=cor_jogador)
-        print(exp["circ"])
         exp["qtd"] = {}
         exp["qtd"]["num"] = 1
 
@@ -513,13 +540,18 @@ def insere_jogador_casa(casa, z, jogador):
 
     casa["canv_obj"][z][idx]["qtd"]["text"] = canvas.create_text(x, y, text=str(casa["canv_obj"][z][idx]["qtd"]["num"]), fill=cor_txt)
     
+
 def remove_jogador_casa(casa, z, jogador):
     global canvas
 
+    idx = None
     for e, el in enumerate(casa["canv_obj"][z]):
         if el["jogador"] == jogador:
             idx = e
 
+    if idx == None:
+        #tentando remove um jogador que não está na casa
+        return
 
     exp = casa["canv_obj"][z][idx]
     if exp["qtd"]["num"] == 1:
@@ -532,12 +564,14 @@ def remove_jogador_casa(casa, z, jogador):
             #se o explorador for o primeiro da lista e a lista não estiver vazia após sua remoção
             #coloca o explorador do outro jogador na primeira posicao
 
-            qtd_exp_aliado = casa["canv_obj"][z][0]["qtd"]["num"]
-            for _ in range(qtd_exp_aliado):
-                remove_jogador_casa(casa, z, (jogador + 2) % 4)
+            qtd_exp = casa["canv_obj"][z][0]["qtd"]["num"]
+            vez_exp = casa["canv_obj"][z][0]["jogador"]
 
-            for _ in range(qtd_exp_aliado):
-                insere_jogador_casa(casa, z, (jogador + 2) % 4)
+            for _ in range(qtd_exp):
+                remove_jogador_casa(casa, z, vez_exp)
+
+            for _ in range(qtd_exp):
+                insere_jogador_casa(casa, z, vez_exp)
 
     else:
         exp["qtd"]["num"] -= 1
@@ -563,7 +597,6 @@ def preenche_polos():
         if casa["front"]["tipo"] == "polo":
             for i in range(n_jogadores):
                 for _ in range(6):
-                    print(f"polo:{i%2} jogador: {i}")
                     insere_jogador_casa(casa, i % 2, i)
 
 
