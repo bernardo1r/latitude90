@@ -6,6 +6,7 @@ from tkinter.constants import ANCHOR
 from model import game_rules
 from controller import event_handler
 from PIL import Image, ImageTk
+from tkinter import ttk
 
 __all__ = ["checa_casa", "carrega_dados", "get_meio_x"]
 
@@ -23,6 +24,12 @@ n_jogadores = 0
 modo_dupla = False
 raio_explorador = 10
 telas = []
+dado_combo = []
+dado_button = None
+canv_dado_colorido = None
+dado_colorido = None
+dado_colorido_button = None
+dado_colorido_combo = None
 
 canvas = None
 
@@ -389,7 +396,7 @@ def remove_dado(idx):
 
 
 def carrega_dados():
-    global dados, dados_coord
+    global dados, dados_coord, dado_colorido
 
     dados_coord = [{"fundo": {"x": 5, "y": 617}, "fundo_lado": 100, "img": {"x": 15, "y": 627}},
                    {"fundo": {"x": 110, "y": 617}, "fundo_lado": 100, "img": {"x": 120, "y": 627}}]
@@ -401,8 +408,79 @@ def carrega_dados():
 
         dados.append(img_dado)
 
+    dado_colorido = tkinter.PhotoImage(file="./view/imgs/dado_colorido_nada.png")
+
+def limpa_dados():
+    global canv_dados, canvas
+
+    for dado in canv_dados:
+        canvas.delete(dado[1])
+        canvas.delete(dado[2])
+        remove_dado(0)
+
+def lanca_dados():
+    global dado_combo
+
+    game_rules.define_dados(dado_combo[0].get(), dado_combo[1].get())
+
+    exibe_dado()
+
+def lanca_dado_colorido():
+    global dado_colorido_combo
+
+    cor = dado_colorido_combo.get()
+    if cor != "nada":
+        cor = int(cor) - 1
+
+    limpa_dado_colorido()
+    exibe_dado_colorido(cor)
+
+def exibe_dado_colorido(cor=None):
+    global colors, canvas, canv_dado_colorido, dado_colorido_combo, dado_colorido_button, dado_colorido
+
+    if cor == None:
+        cor = game_rules.lanca_dado_colorido()
+
+    elif cor == "nada":
+        cor = None
+
+    njogadores = game_rules.get_njogadores()
+
+
+    if cor != None and cor < njogadores:
+        canv_dado_colorido = (cor, canvas.create_rectangle(615, 619, 714, 718, fill=colors[cor], outline=colors[cor]))
+
+    else:
+        canv_dado_colorido = (cor, canvas.create_image(615, 619, anchor=tkinter.NW, image=dado_colorido))
+
+    dado_colorido_combo = ttk.Combobox(canvas, state="readonly", width=10, height=10, values=("nada", "1", "2", "3", "4"))
+    dado_colorido_combo.place(x=612, y=665, anchor=tkinter.NE)
+    dado_colorido_combo.current(0)
+
+
+    dado_colorido_button = tkinter.Button(canvas, text="lançar dados", command=lanca_dado_colorido)
+    dado_colorido_button.place(x=610, y = 690, anchor=tkinter.NE)
+
+def limpa_dado_colorido():
+    global canvas, canv_dado_colorido, dado_colorido_button, dado_colorido_combo
+
+    if canv_dado_colorido:
+        canvas.delete(canv_dado_colorido[1])
+        canv_dado_colorido = None
+
+        dado_colorido_combo.destroy()
+        dado_colorido_button.destroy()
+
+def get_dado_colorido():
+    global canv_dado_colorido
+
+    return canv_dado_colorido
+
 def exibe_dado():
     global colors, canv_dados, dados, dados_coord, canvas
+
+    limpa_dados()
+    limpa_dado_colorido()
 
     canv_dados = []
 
@@ -410,6 +488,9 @@ def exibe_dado():
     color_v = colors[vez]
 
     d = game_rules.get_dados()
+
+    if d[0] == d[1]:
+        exibe_dado_colorido()
 
     i = 0
     for info in dados_coord:
@@ -560,9 +641,21 @@ def sel_dupla():
     img = tkinter.PhotoImage(file="./view/imgs/dupla.png")
     telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
 
+def limpa_objetos():
+    global canvas, dado_combo, dado_button
+
+    for dado in dado_combo:
+        dado.destroy()
+
+    dado_button.destroy()
+
+    limpa_dados()
+    limpa_dado_colorido()
+
 def tela_vitoria():
     global canvas, telas
 
+    limpa_objetos()
     ganhadores = game_rules.get_ganhadores()
 
     if (len(ganhadores) == 2):
@@ -577,7 +670,7 @@ def tela_vitoria():
     telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
 
 def inicia_tabuleiro():
-    global n_jogadores, modo_dupla, canvas, telas
+    global n_jogadores, modo_dupla, canvas, telas, dado_combo, dado_button
 
     n_jogadores = game_rules.get_njogadores()
     modo_dupla = game_rules.get_modo_dupla()
@@ -589,6 +682,23 @@ def inicia_tabuleiro():
     telas.append((img, canvas.create_image(0, 0, anchor=tkinter.NW, image=img)))
 
     exibe_dado()    
+
+    dado_combo = []
+
+    combo = ttk.Combobox(canvas, state="readonly", width=10, height=10, values=("aleatório", "1", "2", "3", "4", "5", "6"))
+    combo.place(x=213, y=640, anchor=tkinter.NW)
+    combo.current(0)
+    dado_combo.append(combo)
+
+    combo = ttk.Combobox(canvas, state="readonly", width=10, height=10, values=("aleatório", "1", "2", "3", "4", "5", "6"))
+    combo.place(x=213, y=665, anchor=tkinter.NW)
+    combo.current(0)
+    dado_combo.append(combo)
+
+
+    dado_button = tkinter.Button(canvas, text="lançar dados", command=lanca_dados)
+    dado_button.place(x=215, y = 690)
+
 
     preenche_polos()    
     

@@ -93,22 +93,34 @@ def sel_dupla(event):
 def jogo(event):
     global jogada_ant, meio_x, estado
 
-    casa = draw.checa_casa(event.x, event.y)
+    x = event.x
+    y = event.y
+
+    casa = draw.checa_casa(x, y)
+    if not casa:
+        #pode ser que o jogador clicou no dado colorido
+        dado_colorido = draw.get_dado_colorido()
+
+        if dado_colorido and dado_colorido[0] != None and checa_retangulo(x, y, 615, 619, 714, 718):
+            #se houver um dado colorido checar foi clicado nele
+
+            jogada_ant = "dado_colorido"
+
+            return
 
     if casa:
 
-        if event.x > meio_x:
+        if x > meio_x:
             z = 1
         else:
             z = 0
-
         if jogada_ant == None:
             casa["game_coords"]["z"] = z
             
             jogada_ant = casa
             return
 
-        else:
+        elif jogada_ant != "dado_colorido":
             x0 = jogada_ant["game_coords"]["x"]
             y0 = jogada_ant["game_coords"]["y"]
             z0 = jogada_ant["game_coords"]["z"]
@@ -154,6 +166,8 @@ def jogo(event):
                         draw.limpa_tela()
                         draw.tela_vitoria()
 
+                        return
+
                     jogada_ant = None
 
                     if len(d) == 0:
@@ -164,6 +178,43 @@ def jogo(event):
 
 
             jogada_ant = None
+        
+        else:
+            #executa dado colorido
+
+            x1 = casa["game_coords"]["x"]
+            y1 = casa["game_coords"]["y"]
+            z1 = z
+            dado_colorido = draw.get_dado_colorido()
+
+            ret = game_rules.executa_dado_colorido(x1, y1, z1, dado_colorido[0])
+
+            if ret:
+                draw.remove_jogador_casa(casa, z1, dado_colorido[0])
+
+                vez = game_rules.get_vez()
+                dupla = game_rules.get_modo_dupla()
+
+                if dado_colorido[0] % 2 != vez % 2 or (dupla == False and dado_colorido[0] != vez):
+                    polo = dado_colorido[0] % 2
+                    casa_polo = draw.get_casa(6, 12)
+                    
+                    draw.insere_jogador_casa(casa_polo, polo, dado_colorido[0])
+
+                draw.limpa_dado_colorido()
+
+                fim_de_jogo = game_rules.get_fim_de_jogo()
+
+                if fim_de_jogo:
+                    estado = "vitoria"
+
+                    draw.limpa_tela()
+                    draw.tela_vitoria()
+
+                    return
+
+                jogada_ant = None
+
 
     else:
         jogada_ant = None

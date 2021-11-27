@@ -105,6 +105,18 @@ def lanca_dados():
     dados[0] = np.random.randint(1, 7)
     dados[1] = np.random.randint(1, 7)
 
+def define_dados(d1, d2):
+    global dados
+
+    dados = [0, 0]
+
+    for e, el in enumerate([d1, d2]):
+        if el == "aleatório":
+            dados[e] = np.random.randint(1, 7)
+        
+        else:
+            dados[e] = int(el)
+
 def verifica_polo(x: int, y: int) -> bool:
     if x == 6 and y == 12:
         return True
@@ -383,14 +395,14 @@ def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: 
 
     return True
 
-def lanca_dado_colorido() -> int:
-    return np.random.randint(0, 4)
+def lanca_dado_colorido():
+    return np.random.choice([0, 1, 2, 3, None, None])
 
 def executa_dado_colorido(x: int, y: int, z: int, dado: int) -> bool:
     '''função executa a ação do dado colorido, dado é um parâmetro que varia de 0 a 3
        (modo no qual os jogadores são identificados dentro do módulo'''
     
-    global polos, vez, exploradores, modo_dupla, qtd_jogadores
+    global polos, vez, exploradores, modo_dupla, qtd_jogadores, jogo_fim
 
     if dado < 0 or dado > 3:
         return False
