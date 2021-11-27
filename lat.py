@@ -1,15 +1,17 @@
 import tkinter
-from view import draw
+from tkinter.constants import E
 from model import game_rules
-
+from view import draw
+from controller import event_handler
 top = tkinter.Tk()
 
 cnv = tkinter.Canvas(top, height=724, width=720)
 cnv.pack()
 
-cnv.bind('<ButtonRelease-1>', draw.click)
+cnv.bind('<ButtonRelease-1>', event_handler.click)
 
-game_rules.inicia_jogo(4, True)
-draw.inicia_tabuleiro(cnv)
+event_handler.set_root(top)
+event_handler.set_canvas(cnv)
+draw.tela_inicial(cnv)
 
 top.mainloop()

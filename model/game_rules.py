@@ -420,3 +420,23 @@ def executa_dado_colorido(x: int, y: int, z: int, dado: int) -> bool:
 
     return True
     
+def get_ganhadores():
+    global modo_dupla, exploradores, metas, qtd_jogadores
+
+    pontos = [0, 0, 0, 0]
+
+    jogador_terminou = exploradores.index(6)
+
+    pontos[jogador_terminou] += 1
+
+    for i in range(len(exploradores)):
+        pontos[i] += exploradores[i]
+        pontos[i] += metas[i]
+
+    ganhador = pontos.index(max(pontos))
+
+    if modo_dupla:
+        return (ganhador, (ganhador + 2) % 2)
+
+    else:
+        return (ganhador, )

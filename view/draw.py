@@ -2,10 +2,12 @@ from os import remove
 import tkinter
 import math
 import copy
+from tkinter.constants import ANCHOR
 from model import game_rules
+from controller import event_handler
 from PIL import Image, ImageTk
 
-__all__ = ["checa_casa", "carrega_dados"]
+__all__ = ["checa_casa", "carrega_dados", "get_meio_x"]
 
 fronteiras = []
 colors = ["green", "yellow", "black", "blue"]
@@ -20,8 +22,10 @@ canv_dados = []
 n_jogadores = 0
 modo_dupla = False
 raio_explorador = 10
-jogada_ant = None
+telas = []
+
 canvas = None
+
 
 def faz_pos_rel(x, y, c_x, c_y):
     return x-c_x, -(y-c_y)
@@ -346,89 +350,13 @@ def checa_casa(x, y):
             return False
 
     return False
-
                     
 
 def checa_clockwise(x, y, borda_x, borda_y):
     if borda_y*x - borda_x*y > 0:
         return True
     return False
-
-
-def click(event):
-    global jogada_ant, meio_x, canvas
     
-    casa = checa_casa(event.x, event.y)
-
-    if casa:
-
-        if event.x > meio_x:
-            z = 1
-        else:
-            z = 0
-
-        if jogada_ant == None:
-            casa["game_coords"]["z"] = z
-            
-            jogada_ant = casa
-            return
-
-        else:
-            x0 = jogada_ant["game_coords"]["x"]
-            y0 = jogada_ant["game_coords"]["y"]
-            z0 = jogada_ant["game_coords"]["z"]
-
-            x1 = casa["game_coords"]["x"]
-            y1 = casa["game_coords"]["y"]
-            z1 = z
-
-            d = game_rules.get_dados()
-
-            for e, el in enumerate(d):
-                ret = game_rules.validar_e_andar(x0, y0, z0, x1, y1, z1, el)
-                if ret:
-
-                    d.pop(e)
-
-                    vez = game_rules.get_vez()
-
-                    if type(ret) == tuple:
-                        if ret[0] == "polo":
-                            remove_jogador_casa(jogada_ant, z0, vez)
-
-                        elif ret[0] == "captura":
-                            #remove jogador inimigo da posição de destino do jogador da vez e insire no seu polo
-                            polo = ret[1] % 2
-                            casa_polo = get_casa(6, 12)
-
-                            remove_jogador_casa(casa, z1, ret[1])
-                            insere_jogador_casa(casa_polo, polo, ret[1])
-
-                    if ret == True or (type(ret) == tuple and ret[0] != "polo"):
-                        remove_jogador_casa(jogada_ant, z0, vez)
-                        insere_jogador_casa(casa, z1, vez)
-
-
-                    remove_dado(e)
-
-                    fim_de_jogo = game_rules.get_fim_de_jogo()
-
-                    if fim_de_jogo:
-                        print("o jogo acabou")
-
-                    jogada_ant = None
-
-                    if len(d) == 0:
-                        game_rules.passa_vez()
-                        exibe_dado()
-
-                    return
-
-
-            jogada_ant = None
-
-    else:
-        jogada_ant = None
         
 def remove_dado(idx):
     global canvas, canv_dados, dados_coord
@@ -599,20 +527,66 @@ def preenche_polos():
                 for _ in range(6):
                     insere_jogador_casa(casa, i % 2, i)
 
+def limpa_tela():
+    global canvas, telas
 
-def inicia_tabuleiro(cnv):
-    global img_tab, n_jogadores, modo_dupla, canvas
+    for i in range(len(telas)):
+
+        tela = telas.pop()
+        canvas.delete(tela[1])
+
+
+
+def tela_inicial(cnv):
+    global canvas, telas
 
     canvas = cnv
+
+    event_handler.set_estado("inicial")
+
+    img = tkinter.PhotoImage(file="./view/imgs/inicial1.png")
+    telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
+
+
+def sel_jogadores():
+    global canvas, telas
+
+    img = tkinter.PhotoImage(file="./view/imgs/inicial2.png")
+    telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
+
+def sel_dupla():
+    global canvas, telas
+
+    img = tkinter.PhotoImage(file="./view/imgs/dupla.png")
+    telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
+
+def tela_vitoria():
+    global canvas, telas
+
+    ganhadores = game_rules.get_ganhadores()
+
+    if (len(ganhadores) == 2):
+        if ganhadores[0] == 0:
+            img = tkinter.PhotoImage(file="./view/imgs/duplafinal1.png")
+        else:
+            img = tkinter.PhotoImage(file="./view/imgs/duplafinal2.png")
+
+    else:
+        img = tkinter.PhotoImage(file=f"./view/imgs/final{ganhadores[0]+1}.png")
+
+    telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
+
+def inicia_tabuleiro():
+    global n_jogadores, modo_dupla, canvas, telas
 
     n_jogadores = game_rules.get_njogadores()
     modo_dupla = game_rules.get_modo_dupla()
 
     faz_fronteiras()
     carrega_dados()
-    
-    img_tab = tkinter.PhotoImage(file="./view/imgs/Latitude90-Tabuleiro.png")
-    canvas.create_image(0, 0, anchor=tkinter.NW, image=img_tab)
+
+    img = tkinter.PhotoImage(file="./view/imgs/Latitude90-Tabuleiro.png")
+    telas.append((img, canvas.create_image(0, 0, anchor=tkinter.NW, image=img)))
 
     exibe_dado()    
 
