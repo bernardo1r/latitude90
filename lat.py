@@ -1,9 +1,9 @@
 import tkinter
-from tkinter.constants import E
-from model import game_rules
 from view import draw
 from controller import event_handler
+
 top = tkinter.Tk()
+top.title("Latitude 90º")
 
 cnv = tkinter.Canvas(top, height=724, width=720)
 cnv.pack()

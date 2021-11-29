@@ -1,4 +1,8 @@
+from view import draw
+from controller import event_handler
 import numpy as np
+import json
+import random
 
 __all__ = ["inicia_jogo", "get_vez", "passa_vez", "get_fim_de_jogo", "lanca_dados", "verificar_casa", "validar_e_andar", "lanca_dado_colorido", "executa_dado_colorido"]
 
@@ -57,6 +61,7 @@ def inicia_jogo(jogadores: int, dupla: bool) -> None:
 
     vez = np.random.randint(0, qtd_jogadores)
     lanca_dados()
+    embaralha_cartas()
 
     if dupla:
         modo_dupla = True
@@ -64,6 +69,64 @@ def inicia_jogo(jogadores: int, dupla: bool) -> None:
         modo_dupla = False
 
     jogo_fim = False
+
+def faz_save(filename):
+    global tabuleiro, polos, vez, metas, exploradores, modo_dupla, qtd_jogadores, dados, cartas
+
+    save = {}
+    save["tabuleiro"] = tabuleiro
+    save["polos"] = polos
+    save["vez"] = vez
+    save["metas"] = metas
+    save["exploradores"] = exploradores
+    save["modo_dupla"] = modo_dupla
+    save["qtd_jogadores"] = qtd_jogadores
+    save["dados"] = dados
+    save["dado_colorido"] = draw.get_dado_colorido()
+    save["cartas"] = cartas
+
+    with open(filename, "w") as file:
+        json.dump(save, file)
+
+def carrega_save(filename):
+    global tabuleiro, polos, vez, metas, exploradores, modo_dupla, qtd_jogadores, dados, jogo_fim, cartas
+
+    jogo_fim = False
+
+    with open(filename, "r") as file:
+        save = json.load(file)
+
+    tabuleiro = save["tabuleiro"]
+    polos = save["polos"]
+    vez = save["vez"]
+    metas = save["metas"]
+    exploradores = save["exploradores"]
+    modo_dupla = save["modo_dupla"]
+    qtd_jogadores = save["qtd_jogadores"]
+    dados = save["dados"]
+    cartas = save["cartas"]
+
+    draw.limpa_tela()
+    draw.inicia_tabuleiro(True)
+    event_handler.exibe_save()
+
+    for hesm_i, hesm in enumerate(tabuleiro):
+        for lat_i, lat in enumerate(hesm):
+            for long_i, long in enumerate(lat):
+                for jogador in long["jogadores"]:
+                    casa = draw.get_casa(lat_i, long_i)
+                    draw.insere_jogador_casa(casa, hesm_i, jogador)
+
+    for polo in range(2):
+        casa = draw.get_casa(6, 12)
+
+        for jogador in polos[polo]:
+            draw.insere_jogador_casa(casa, polo, jogador)
+
+    if save["dado_colorido"]:
+        draw.exibe_dado_colorido(save["dado_colorido"])
+                
+
 
 def get_vez() -> int:
     global vez
@@ -116,6 +179,12 @@ def define_dados(d1, d2):
         
         else:
             dados[e] = int(el)
+
+def embaralha_cartas():
+    global cartas
+
+    arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    cartas = random.sample(arr, len(arr))
 
 def verifica_polo(x: int, y: int) -> bool:
     if x == 6 and y == 12:
@@ -292,26 +361,23 @@ def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> No
 
         return status
             
+    
+    if len(tabuleiro[z1][x1][y1]["jogadores"]) > 0 and tabuleiro[z1][x1][y1]["jogadores"].count(vez) == 0:
+        #caso captura de explorador
+        if not modo_dupla or tabuleiro[z1][x1][y1]["jogadores"][0] != (vez + 2) % 4:
+            #se nao estiver no modo dupla ou nao for o explorador dupla do jogador da vez
+            cap = tabuleiro[z1][x1][y1]["jogadores"].pop()
+            polos[cap%2].append(cap)
 
-    if len(tabuleiro[z1][x1][y1]["jogadores"]) > 0:
-        #testando para caso de captura do explorador adversário e se a meta é conquistada
-        
-        if tabuleiro[z1][x1][y1]["jogadores"].count(vez) == 0:
-            #caso captura de explorador
-            if not modo_dupla or tabuleiro[z1][x1][y1]["jogadores"][0] != (vez + 2) % 4:
-                #se nao estiver no modo dupla ou nao for o explorador dupla do jogador da vez
-                cap = tabuleiro[z1][x1][y1]["jogadores"].pop()
-                polos[cap%2].append(cap)
+            status = ("captura", cap)
+    else:
+        #caso meta é conquistada
+        if "ficha" in tabuleiro[z1][x1][y1]:
+            del tabuleiro[z1][x1][y1]["ficha"]
 
-                status = ("captura", cap)
-        else:
-            #caso meta é conquistada
-            if "ficha" in tabuleiro[z1][x1][y1]:
-                del tabuleiro[z1][x1][y1]["ficha"]
+            metas[vez] += 1
 
-                metas[vez] += 1
-
-                status = ("ficha", )
+            status = ("ficha", )
         
 
     tabuleiro[z1][x1][y1]["jogadores"].append(vez)
@@ -341,7 +407,7 @@ def verificar_casa(x: int, y: int, z: int) -> bool:
         return False
 
 def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> bool:
-    global tabuleiro, jogo_fim, qtd_jogadores
+    global tabuleiro, jogo_fim, qtd_jogadores, cartas
 
     if jogo_fim:
         return False
@@ -391,6 +457,10 @@ def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: 
     status = andar(x0, y0, z0, x1, y1, z1, dado)
 
     if status:
+        if status[0] == "ficha":
+            #retira uma carta
+            return (status[0], cartas.pop())
+
         return status
 
     return True
@@ -431,7 +501,9 @@ def executa_dado_colorido(x: int, y: int, z: int, dado: int) -> bool:
         polos[dado%2].append(dado)
 
     return True
-    
+
+
+
 def get_ganhadores():
     global modo_dupla, exploradores, metas, qtd_jogadores
 
@@ -452,3 +524,4 @@ def get_ganhadores():
 
     else:
         return (ganhador, )
+

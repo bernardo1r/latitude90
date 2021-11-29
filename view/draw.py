@@ -438,6 +438,8 @@ def lanca_dado_colorido():
 def exibe_dado_colorido(cor=None):
     global colors, canvas, canv_dado_colorido, dado_colorido_combo, dado_colorido_button, dado_colorido
 
+    limpa_dado_colorido()
+
     if cor == None:
         cor = game_rules.lanca_dado_colorido()
 
@@ -476,7 +478,7 @@ def get_dado_colorido():
 
     return canv_dado_colorido
 
-def exibe_dado():
+def exibe_dado(trocar_dado_colorido=False):
     global colors, canv_dados, dados, dados_coord, canvas
 
     limpa_dados()
@@ -489,7 +491,7 @@ def exibe_dado():
 
     d = game_rules.get_dados()
 
-    if d[0] == d[1]:
+    if not trocar_dado_colorido and d[0] == d[1]:
         exibe_dado_colorido()
 
     i = 0
@@ -623,7 +625,7 @@ def tela_inicial(cnv):
 
     canvas = cnv
 
-    event_handler.set_estado("inicial")
+    event_handler.set_estado(("inicial", ))
 
     img = tkinter.PhotoImage(file="./view/imgs/inicial1.png")
     telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
@@ -651,6 +653,7 @@ def limpa_objetos():
 
     limpa_dados()
     limpa_dado_colorido()
+    limpa_save()
 
 def tela_vitoria():
     global canvas, telas
@@ -667,9 +670,40 @@ def tela_vitoria():
     else:
         img = tkinter.PhotoImage(file=f"./view/imgs/final{ganhadores[0]+1}.png")
 
-    telas.append((img, canvas.create_image(0, 0, anch=tkinter.NW, image=img)))
+    telas.append((img, canvas.create_image(0, 0, anchor=tkinter.NW, image=img)))
 
-def inicia_tabuleiro():
+def mostra_carta(c):
+    global carta
+
+    img = tkinter.PhotoImage(file=f"./view/imgs/C{c:02}.png")
+
+    carta = (img, canvas.create_image(279, 10, anchor=tkinter.NW, image=img))
+    
+
+def limpa_carta():
+    global carta, canvas
+
+    if carta:
+        canvas.delete(carta[1])
+
+    carta = None
+
+def exibe_save():
+    global save, canvas
+
+    img = tkinter.PhotoImage(file="./view/imgs/save.png")
+
+    save = (img, canvas.create_image(567, 6, anchor=tkinter.NW, image=img))
+
+def limpa_save():
+    global save, canvas
+
+    if save:
+        canvas.delete(save[1])
+
+    save = None
+
+def inicia_tabuleiro(from_save=False):
     global n_jogadores, modo_dupla, canvas, telas, dado_combo, dado_button
 
     n_jogadores = game_rules.get_njogadores()
@@ -679,9 +713,7 @@ def inicia_tabuleiro():
     carrega_dados()
 
     img = tkinter.PhotoImage(file="./view/imgs/Latitude90-Tabuleiro.png")
-    telas.append((img, canvas.create_image(0, 0, anchor=tkinter.NW, image=img)))
-
-    exibe_dado()    
+    telas.append((img, canvas.create_image(0, 0, anchor=tkinter.NW, image=img)))  
 
     dado_combo = []
 
@@ -699,8 +731,11 @@ def inicia_tabuleiro():
     dado_button = tkinter.Button(canvas, text="lançar dados", command=lanca_dados)
     dado_button.place(x=215, y = 690)
 
-
-    preenche_polos()    
+    if from_save:
+        exibe_dado(True)
+    else:
+        preenche_polos() 
+        exibe_dado()    
     
 
     '''for i in range(720):
