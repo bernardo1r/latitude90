@@ -91,7 +91,7 @@ def faz_save(filename):
     save["modo_dupla"] = modo_dupla
     save["qtd_jogadores"] = qtd_jogadores
     save["dados"] = dados
-    save["dado_colorido"] = draw.get_dado_colorido()
+    save["dado_colorido"] = draw.get_dado_colorido()[0]
     save["cartas"] = cartas
 
     with open(filename, "w") as file:

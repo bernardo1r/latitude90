@@ -114,6 +114,9 @@ def verifica_e_executa_fim_de_jogo():
 
     if fim_de_jogo:
         executa_fim_de_jogo()
+        return True
+
+    return False
 
 def exibe_save():
     global pode_salvar
@@ -256,7 +259,8 @@ def jogo(event):
 
                     draw.remove_dado(e)
 
-                    verifica_e_executa_fim_de_jogo()
+                    if verifica_e_executa_fim_de_jogo():
+                        return
 
                     if len(d) == 0 and (type(ret) != tuple or ret[0] != "ficha"):
                         passa_vez()
