@@ -91,8 +91,14 @@ def faz_save(filename):
     save["modo_dupla"] = modo_dupla
     save["qtd_jogadores"] = qtd_jogadores
     save["dados"] = dados
-    save["dado_colorido"] = draw.get_dado_colorido()[0]
     save["cartas"] = cartas
+    
+    dado = draw.get_dado_colorido()
+    if dado:
+        save["dado_colorido"] = dado[0]
+    else:
+        save["dado_colorido"] = None
+    
 
     with open(filename, "w") as file:
         json.dump(save, file)
