@@ -4,9 +4,18 @@ import numpy as np
 import json
 import random
 
-__all__ = ["inicia_jogo", "get_vez", "passa_vez", "get_fim_de_jogo", "lanca_dados", "verificar_casa", "validar_e_andar", "lanca_dado_colorido", "executa_dado_colorido"]
+tabuleiro = []
+polos = []
+metas = []
+exploradores = []
+modo_dupla = False
+jogo_fim = False
+qtd_jogadores = None
+dados = []
+cartas = []
+vez = None
 
-def inicia_jogo(jogadores: int, dupla: bool) -> None:
+def inicia_jogo(jogadores, dupla):
     global tabuleiro, polos, vez, metas, exploradores, modo_dupla, jogo_fim, qtd_jogadores
 
     if jogadores != 2 and jogadores != 4:
@@ -128,7 +137,7 @@ def carrega_save(filename):
                 
 
 
-def get_vez() -> int:
+def get_vez():
     global vez
     
     return vez
@@ -143,19 +152,19 @@ def get_modo_dupla():
 
     return modo_dupla
 
-def passa_vez() -> None:
+def passa_vez():
     global vez
 
     vez = (vez + 1) % qtd_jogadores
 
     lanca_dados()
 
-def get_fim_de_jogo() -> bool:
+def get_fim_de_jogo():
     global jogo_fim
 
     return jogo_fim
 
-def get_dados() -> int:
+def get_dados():
     global dados
 
     return dados
@@ -186,13 +195,13 @@ def embaralha_cartas():
     arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     cartas = random.sample(arr, len(arr))
 
-def verifica_polo(x: int, y: int) -> bool:
+def verifica_polo(x, y):
     if x == 6 and y == 12:
         return True
     else:
         return False
 
-def casa_vazia(x: int, y: int, z: int) -> bool:
+def casa_vazia(x, y, z):
     global tabuleiro, vez, modo_dupla
 
 
@@ -214,7 +223,7 @@ def casa_vazia(x: int, y: int, z: int) -> bool:
     return True
         
 
-def andar_lat(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int, sentido: int) -> bool:
+def andar_lat(x0, y0, z0, x1, y1, z1, dado, sentido):
     '''função que anda latitudinalmente checando casa a casa para possíveis casas fechadas
        se o sentido for o número 1 anda em direção ao polo do hemisfério atual (z0),
        anda na direção oposta se sentido for o número -1'''
@@ -299,7 +308,7 @@ def andar_lat(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int, s
     else:
         return False
 
-def andar_long(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> bool:
+def andar_long(x0, y0, z0, x1, y1, z1, dado):
     '''função que anda longitudinalmente checando casa a casa para possíveis casas fechadas'''
 
     #testando se é possível chegar na longitude desejada
@@ -319,7 +328,7 @@ def andar_long(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) 
 
     return True
 
-def remover_explorador(jogador: int, x: int, y: int, z: int) -> bool:
+def remover_explorador(jogador, x, y, z):
     global tabuleiro, polos
 
     if verifica_polo(x, y):
@@ -339,7 +348,7 @@ def remover_explorador(jogador: int, x: int, y: int, z: int) -> bool:
 
     return True
     
-def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> None:
+def andar(x0, y0, z0, x1, y1, z1, dado):
     global tabuleiro, polos, vez, metas, exploradores, modo_dupla, jogo_fim
 
     remover_explorador(vez, x0, y0, z0)        
@@ -384,7 +393,7 @@ def andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> No
 
     return status
 
-def verificar_casa(x: int, y: int, z: int) -> bool:
+def verificar_casa(x, y, z):
     global tabuleiro, polos, vez
 
     if x < 0 or x > 6:
@@ -406,7 +415,7 @@ def verificar_casa(x: int, y: int, z: int) -> bool:
 
         return False
 
-def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: int) -> bool:
+def validar_e_andar(x0, y0, z0, x1, y1, z1, dado):
     global tabuleiro, jogo_fim, qtd_jogadores, cartas
 
     if jogo_fim:
@@ -468,7 +477,7 @@ def validar_e_andar(x0: int, y0: int, z0: int, x1: int, y1: int, z1: int, dado: 
 def lanca_dado_colorido():
     return np.random.choice([0, 1, 2, 3, None, None])
 
-def executa_dado_colorido(x: int, y: int, z: int, dado: int) -> bool:
+def executa_dado_colorido(x, y, z, dado):
     '''função executa a ação do dado colorido, dado é um parâmetro que varia de 0 a 3
        (modo no qual os jogadores são identificados dentro do módulo'''
     

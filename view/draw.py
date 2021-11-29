@@ -1,14 +1,10 @@
-from os import remove
 import tkinter
 import math
 import copy
-from tkinter.constants import ANCHOR
 from model import game_rules
 from controller import event_handler
 from PIL import Image, ImageTk
 from tkinter import ttk
-
-__all__ = ["checa_casa", "carrega_dados", "get_meio_x"]
 
 fronteiras = []
 colors = ["green", "yellow", "black", "blue"]
@@ -20,6 +16,7 @@ c_y = 367
 meio_x = 364
 dados = []
 canv_dados = []
+dados_coord = []
 n_jogadores = 0
 modo_dupla = False
 raio_explorador = 10
@@ -30,7 +27,6 @@ canv_dado_colorido = None
 dado_colorido = None
 dado_colorido_button = None
 dado_colorido_combo = None
-
 canvas = None
 
 
@@ -736,10 +732,3 @@ def inicia_tabuleiro(from_save=False):
     else:
         preenche_polos() 
         exibe_dado()    
-    
-
-    '''for i in range(720):
-        print(i)
-        for j in range(724):
-            if checa_casa(i, j):
-                canvas.create_rectangle(i, j, i, j, outline="red")'''

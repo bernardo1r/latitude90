@@ -133,10 +133,12 @@ def jogo(event):
     y = event.y
 
     if estado[0] == "ficha" and estado[1] != 1 and estado[1] != 3:
+        #se for uma ficha não implementada
         estado = ("jogo", )
         draw.limpa_carta()
 
         d = game_rules.get_dados()
+        #se for a ultima ação do jogador
         if len(d) == 0:
             passa_vez()
 
@@ -198,6 +200,7 @@ def jogo(event):
                     
 
                 if ret:
+                    #se fez uma jogada valida
                     draw.limpa_carta()
 
                     vez = game_rules.get_vez()
@@ -206,6 +209,7 @@ def jogo(event):
                     draw.insere_jogador_casa(casa, z1, vez)
 
                     if len(d) == 0:
+                        #se for a ultima ação do jogador
                         passa_vez()
 
                     estado = ("jogo", )
@@ -249,6 +253,7 @@ def jogo(event):
                             draw.mostra_carta(ret[1])
 
                     if ret == True or (type(ret) == tuple and ret[0] != "polo"):
+                        #se for uma jogada que não foi ao polo oposto
                         draw.remove_jogador_casa(jogada_ant, z0, vez)
                         draw.insere_jogador_casa(casa, z1, vez)
 
@@ -271,12 +276,14 @@ def jogo(event):
             ret = game_rules.executa_dado_colorido(x1, y1, z1, dado_colorido[0])
 
             if ret:
+                #se foi uma jogada válida
                 draw.remove_jogador_casa(casa, z1, dado_colorido[0])
 
                 vez = game_rules.get_vez()
                 dupla = game_rules.get_modo_dupla()
 
                 if dado_colorido[0] % 2 != vez % 2 or (dupla == False and dado_colorido[0] != vez):
+                    #se foi selecionado um explorador inimigo, coloca no polo de origem
                     polo = dado_colorido[0] % 2
                     casa_polo = draw.get_casa(6, 12)
                     
