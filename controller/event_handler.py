@@ -126,6 +126,31 @@ def passa_vez():
     draw.exibe_dado()
     exibe_save()
 
+def remove_jogador(ret, casa, z0, z1):
+    global estado, jogada_ant
+    vez = game_rules.get_vez()
+
+    if type(ret) == tuple:
+        if ret[0] == "polo":
+            draw.remove_jogador_casa(jogada_ant, z0, vez)
+
+        elif ret[0] == "captura":
+            #remove jogador inimigo da posição de destino do jogador da vez e insire no seu polo
+            polo = ret[1] % 2
+            casa_polo = draw.get_casa(6, 12)
+
+            draw.remove_jogador_casa(casa, z1, ret[1])
+            draw.insere_jogador_casa(casa_polo, polo, ret[1])
+
+        elif ret[0] == "ficha":
+            estado = ("ficha", ret[1])
+            draw.mostra_carta(ret[1])
+
+    if ret == True or (type(ret) == tuple and ret[0] != "polo"):
+        #se for uma jogada que não foi ao polo oposto
+        draw.remove_jogador_casa(jogada_ant, z0, vez)
+        draw.insere_jogador_casa(casa, z1, vez)
+
 def jogo(event):
     global jogada_ant, meio_x, estado, pode_salvar
 
@@ -203,21 +228,14 @@ def jogo(event):
                     #se fez uma jogada valida
                     draw.limpa_carta()
 
-                    vez = game_rules.get_vez()
-
-                    draw.remove_jogador_casa(jogada_ant, z0, vez)
-                    draw.insere_jogador_casa(casa, z1, vez)
-
-                    if len(d) == 0:
-                        #se for a ultima ação do jogador
-                        passa_vez()
-
                     estado = ("jogo", )
 
-                    verifica_e_executa_fim_de_jogo()
+                    remove_jogador(ret, casa, z0, z1)
 
-                    
+                    if len(d) == 0 and (type(ret) != tuple or ret[0] != "ficha"):
+                        passa_vez()
 
+                    verifica_e_executa_fim_de_jogo()                    
                 
                 jogada_ant = None
                 return
@@ -234,28 +252,7 @@ def jogo(event):
 
                     d.pop(e)
 
-                    vez = game_rules.get_vez()
-
-                    if type(ret) == tuple:
-                        if ret[0] == "polo":
-                            draw.remove_jogador_casa(jogada_ant, z0, vez)
-
-                        elif ret[0] == "captura":
-                            #remove jogador inimigo da posição de destino do jogador da vez e insire no seu polo
-                            polo = ret[1] % 2
-                            casa_polo = draw.get_casa(6, 12)
-
-                            draw.remove_jogador_casa(casa, z1, ret[1])
-                            draw.insere_jogador_casa(casa_polo, polo, ret[1])
-
-                        elif ret[0] == "ficha":
-                            estado = ("ficha", ret[1])
-                            draw.mostra_carta(ret[1])
-
-                    if ret == True or (type(ret) == tuple and ret[0] != "polo"):
-                        #se for uma jogada que não foi ao polo oposto
-                        draw.remove_jogador_casa(jogada_ant, z0, vez)
-                        draw.insere_jogador_casa(casa, z1, vez)
+                    remove_jogador(ret, casa, z0, z1)
 
                     draw.remove_dado(e)
 
